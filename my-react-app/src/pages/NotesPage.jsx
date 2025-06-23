@@ -12,6 +12,8 @@ import { Button, Modal, Alert, Navbar } from "react-bootstrap";
 import {Container} from "react-bootstrap";
 import { NavDropdown } from "react-bootstrap";
 import Nav from 'react-bootstrap/Nav';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import '../App.css';
 
 function NotePage() {
@@ -22,8 +24,25 @@ function NotePage() {
   const [successEdited, setSuccessEdited] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const localKey = `calendar_${id}`;
+  const [calendar , setCalendar] = useState(false);
 
   const message = location.state?.message;
+
+
+  useEffect(()=>{
+    const storedCalendar = localStorage.getItem(localKey);
+    setCalendar(storedCalendar == "true");
+  },[localKey]);
+
+  useEffect(()=>{
+    localStorage.setItem(localKey, calendar);
+
+  },[calendar,localKey]);
+
+ 
+
+  
 
   useEffect(() => {
     if (message) {
@@ -90,7 +109,7 @@ function NotePage() {
                 </Alert>
             )}
         
-
+         
           <div
             className="p-5"
             style={{
@@ -110,7 +129,7 @@ function NotePage() {
         <Navbar.Collapse className="justify-content-end" >
           <Navbar.Text className="text-white" >
             <NavDropdown title="..." id="basic-nav-dropdown" style={{backgroundColor: 'rgb(24, 22, 26)' , color:'white'}} >
-              <NavDropdown.Item href="#action/3.1"  >Add Calendar</NavDropdown.Item>
+              <NavDropdown.Item  onClick={()=>setCalendar(prev =>!prev)}  >Add Calendar</NavDropdown.Item>
             </NavDropdown>
           </Navbar.Text>
         </Navbar.Collapse>
@@ -123,6 +142,10 @@ function NotePage() {
               <h6 className="text-white mt-5">Created At</h6>
               <h6 className="text-white">{note.created_at}</h6>
             </div>
+
+            {calendar && (
+              <Calendar/> 
+              )}
 
             <div className="mt-5">
               <Button variant="danger" onClick={() => setShowModal(true)}>
