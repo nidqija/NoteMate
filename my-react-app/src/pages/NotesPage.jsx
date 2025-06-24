@@ -17,29 +17,38 @@ import 'react-calendar/dist/Calendar.css';
 import '../App.css';
 
 function NotePage() {
-  const { id } = useParams();
   const [note, setNote] = useState(null);
   const [fetchError, setFetchError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [calendarModal , setCalendarModal] = useState(false);
   const [successEdited, setSuccessEdited] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const localKey = `calendar_${id}`;
-  const [calendar , setCalendar] = useState(false);
-
   const message = location.state?.message;
 
+  const { id } = useParams();
+  const localKey = `calendar_${id}`;
 
-  useEffect(()=>{
-    const storedCalendar = localStorage.getItem(localKey);
-    setCalendar(storedCalendar == "true");
-  },[localKey]);
+//load visibility for the note from local storage //
 
+
+  const getCalendarVisibility = () =>{
+    const stored = localStorage.getItem(localKey);
+    return stored == 'true';
+  }
+    const [calendar , setCalendar] = useState(getCalendarVisibility);
+
+// update local storage whenever the update is changed //
   useEffect(()=>{
     localStorage.setItem(localKey, calendar);
-
+    
   },[calendar,localKey]);
 
+  const toggleCalendar = () =>{
+     setCalendar(prev =>!prev)
+     setCalendarModal(true);
+    
+  }
  
 
   
@@ -108,6 +117,13 @@ function NotePage() {
                 <p>Your note has been updated!</p>
                 </Alert>
             )}
+
+                {calendar && calendarModal &&(
+                <Alert variant="success" dismissible onClose={() => setCalendarModal(false)}>
+                <Alert.Heading>New Component!</Alert.Heading>
+                <p>Calendar is added!</p>
+                </Alert>
+                 )}
         
          
           <div
@@ -129,7 +145,7 @@ function NotePage() {
         <Navbar.Collapse className="justify-content-end" >
           <Navbar.Text className="text-white" >
             <NavDropdown title="..." id="basic-nav-dropdown" style={{backgroundColor: 'rgb(24, 22, 26)' , color:'white'}} >
-              <NavDropdown.Item  onClick={()=>setCalendar(prev =>!prev)}  >Add Calendar</NavDropdown.Item>
+              <NavDropdown.Item  onClick={toggleCalendar}  >Add Calendar</NavDropdown.Item>
             </NavDropdown>
           </Navbar.Text>
         </Navbar.Collapse>
@@ -139,19 +155,26 @@ function NotePage() {
             <EditableText initialText={note.note_title} onSave={handleTitleSave} />
             <div className="mt-5">
               <EditableText2 initialText2={note.note_desc} onSave={handleDescSave} />
-              <h6 className="text-white mt-5">Created At</h6>
-              <h6 className="text-white">{note.created_at}</h6>
+             
             </div>
 
+             
+        
+
             {calendar && (
-              <Calendar/> 
+              <>
+              <p style={{fontSize:'20px' ,textDecoration:'underline'}} className="mt-5 text-white">Calendar</p>
+              <Calendar /> 
+              </>
               )}
 
-            <div className="mt-5">
+                <div className="mt-5">
               <Button variant="danger" onClick={() => setShowModal(true)}>
                 Delete
               </Button>
             </div>
+
+          
 
             <Modal show={showModal} onHide={() => setShowModal(false)} centered>
               <Modal.Header style={{ backgroundColor: "rgb(24, 22, 26)" }}>
