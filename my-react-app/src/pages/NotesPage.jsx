@@ -1,5 +1,4 @@
 // pages/NotePage.jsx
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { supabase } from "../CreateClient";
@@ -11,10 +10,10 @@ import EditableText2 from "../components/editableText2";
 import { Button, Modal, Alert, Navbar } from "react-bootstrap";
 import {Container} from "react-bootstrap";
 import { NavDropdown } from "react-bootstrap";
-import Nav from 'react-bootstrap/Nav';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import '../App.css';
+import { Card , Col ,Row} from "react-bootstrap";
 
 function NotePage() {
   const [note, setNote] = useState(null);
@@ -25,12 +24,18 @@ function NotePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const message = location.state?.message;
+  const [chooseDate , setChooseDate] = useState(null);
 
   const { id } = useParams();
   const localKey = `calendar_${id}`;
 
-//load visibility for the note from local storage //
 
+  const handleDateChange = (date) =>{
+    setChooseDate(date);
+  };
+
+//load visibility for the note from local storage //
+   
 
   const getCalendarVisibility = () =>{
     const stored = localStorage.getItem(localKey);
@@ -164,9 +169,34 @@ function NotePage() {
             {calendar && (
               <>
               <p style={{fontSize:'20px' ,textDecoration:'underline'}} className="mt-5 text-white">Calendar</p>
-              <Calendar /> 
+              <Row>
+                <Col>
+                       <Calendar style={{backgroundColor:'rgb(24, 22, 26)'}} onChange={handleDateChange} value={chooseDate}  /> 
+          
+        </Col>
+             <Col>
+           {chooseDate&&(
+            <>
+             <Card className="mt-2" >
+            <Card.Body>
+              <Card.Text>
+                Selected date : {chooseDate.toDateString()}
+              </Card.Text>
+            </Card.Body>
+          </Card>
+          
+                  </>
+              )}
+          
+        </Col>
+        </Row>
+        
+             
               </>
               )}
+
+
+             
 
                 <div className="mt-5">
               <Button variant="danger" onClick={() => setShowModal(true)}>
