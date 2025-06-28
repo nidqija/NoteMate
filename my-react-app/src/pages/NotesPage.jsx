@@ -1,6 +1,6 @@
 // pages/NotePage.jsx
 import { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useNavigate, useParams, useLocation} from "react-router-dom";
 import { supabase } from "../CreateClient";
 import NoteTitle from "../components/NoteTitle";
 import { IoIosArrowRoundBack } from "react-icons/io";
@@ -14,8 +14,9 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import '../App.css';
 import { Card , Col ,Row} from "react-bootstrap";
-
+import { Form } from "react-bootstrap";
 function NotePage() {
+
   const [note, setNote] = useState(null);
   const [fetchError, setFetchError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -25,9 +26,65 @@ function NotePage() {
   const navigate = useNavigate();
   const message = location.state?.message;
   const [chooseDate , setChooseDate] = useState(null);
-
+  const [reminderInput , setReminderInput] = useState(false);
+  const [reminder_title , setReminderTitle] = useState("");
+  const [reminder_desc , setReminderDesc] = useState("");
+  const [notes , setNotes] = useState([]);
   const { id } = useParams();
   const localKey = `calendar_${id}`;
+
+
+
+
+useEffect(()=>{
+  
+   const getNotes =async () =>{
+    const {data , error} = await supabase.from("Notes").select('*');
+
+    if(error){
+      console.log("error fetching notes" , error);
+      
+    } else {
+      setNotes(data);
+    }
+   }
+
+   getNotes();
+},[])
+
+
+const handleSubmitReminder = async(e) =>{
+  e.preventDefault();
+
+  const NotesIdParsed = parseInt(id);
+
+  const {data , error} = await supabase.from("Reminder").insert({
+    reminder_title : reminder_title,
+    reminder_desc :reminder_desc,
+    reminder_date : chooseDate.toDateString(),
+    note_id : NotesIdParsed,
+    
+  })
+
+  if (error){
+    console.log("error submitting reminder" , error.message);
+    return;
+  } else{
+    console.log("Reminder created successfully!" , data);
+    navigate(`/notes/${id}`);
+    handleReminder(false);
+  }
+}
+
+
+
+
+  const handleReminder = () =>{
+    setReminderInput(true);
+  }
+
+
+  
 
 
   const handleDateChange = (date) =>{
@@ -43,6 +100,7 @@ function NotePage() {
   }
     const [calendar , setCalendar] = useState(getCalendarVisibility);
 
+
 // update local storage whenever the update is changed //
   useEffect(()=>{
     localStorage.setItem(localKey, calendar);
@@ -50,7 +108,7 @@ function NotePage() {
   },[calendar,localKey]);
 
   const toggleCalendar = () =>{
-     setCalendar(prev =>!prev)
+    setCalendar(prev => !prev)
      setCalendarModal(true);
     
   }
@@ -105,6 +163,9 @@ function NotePage() {
       navigate("/home", { state: { message2: "Note deleted successfully" } });
     }
   };
+
+
+  
 
   return (
     <div>
@@ -171,7 +232,7 @@ function NotePage() {
               <p style={{fontSize:'20px' ,textDecoration:'underline'}} className="mt-5 text-white">Calendar</p>
               <Row>
                 <Col>
-                       <Calendar style={{backgroundColor:'rgb(24, 22, 26)'}} onChange={handleDateChange} value={chooseDate}  /> 
+                <Calendar  onChange={handleDateChange} value={chooseDate}  /> 
           
         </Col>
              <Col>
@@ -180,7 +241,39 @@ function NotePage() {
              <Card className="mt-2" >
             <Card.Body>
               <Card.Text>
-                Selected date : {chooseDate.toDateString()}
+
+                     <Navbar  >
+        <Navbar.Toggle />
+          <span></span><Navbar.Text >Selected date : {chooseDate.toDateString()} </Navbar.Text>
+        <Navbar.Collapse className="justify-content-end" >
+          <Navbar.Text className="text-white" >
+            <NavDropdown title="..."  >
+              <NavDropdown.Item onClick={handleReminder}>Add Reminder</NavDropdown.Item>
+            </NavDropdown>
+          </Navbar.Text>
+        </Navbar.Collapse>
+    </Navbar>
+
+      {reminderInput&&(
+         <Form onSubmit={handleSubmitReminder}>
+          
+              <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
+        <Form.Label>Reminder Title</Form.Label>
+        <Form.Control type="text" onChange={(e)=>setReminderTitle(e.target.value)} name="reminder_title" rows={3} />
+      </Form.Group>
+          <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
+        <Form.Label>Reminder Description</Form.Label>
+        <Form.Control as="textarea" onChange={(e)=>setReminderDesc(e.target.value)} name="reminder_desc" rows={3} />
+      </Form.Group>
+       <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
+        <Form.Label>Date</Form.Label>
+        <Form.Control type="text" name="reminder_date"  rows={3} value={chooseDate.toDateString()} />
+      </Form.Group>
+      <Button type="submit">Submit</Button>
+         </Form>
+      )}
+
+    
               </Card.Text>
             </Card.Body>
           </Card>
