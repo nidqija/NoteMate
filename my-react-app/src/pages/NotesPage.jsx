@@ -30,11 +30,32 @@ function NotePage() {
   const [reminder_title , setReminderTitle] = useState("");
   const [reminder_desc , setReminderDesc] = useState("");
   const [notes , setNotes] = useState([]);
+  const [showReminder , setShowReminder] = useState(null);
   const { id } = useParams();
   const localKey = `calendar_${id}`;
 
 
 
+
+
+useEffect(()=>{
+  const getReminders = async() =>{
+    const {data , error} = await supabase.from("Reminder").select(`reminder_id , reminder_title , reminder_desc, reminder_date ,Notes(id)`).eq('note_id' ,id);
+      
+    if(error){
+      console.log("error showing reminders" , error.message);
+      return
+    } else{
+      console.log("fetched reminder!" , data);
+        setShowReminder(data);
+
+    }
+
+  }
+
+
+  getReminders();
+},[])
 
 useEffect(()=>{
   
@@ -72,6 +93,8 @@ const handleSubmitReminder = async(e) =>{
   } else{
     console.log("Reminder created successfully!" , data);
     navigate(`/notes/${id}`);
+    setReminderDesc("");
+    setReminderTitle("");
     handleReminder(false);
   }
 }
@@ -121,6 +144,8 @@ const handleSubmitReminder = async(e) =>{
       setSuccessEdited(true);
     }
   }, [message]);
+
+
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -212,12 +237,16 @@ const handleSubmitReminder = async(e) =>{
           <Navbar.Text className="text-white" >
             <NavDropdown title="..." id="basic-nav-dropdown" style={{backgroundColor: 'rgb(24, 22, 26)' , color:'white'}} >
               <NavDropdown.Item  onClick={toggleCalendar}  >Add Calendar</NavDropdown.Item>
+              <NavDropdown.Item  style={{backgroundColor :'red' , color :'white'}} onClick={() => setShowModal(true)}> Delete </NavDropdown.Item>
+
             </NavDropdown>
           </Navbar.Text>
         </Navbar.Collapse>
     </Navbar>
 
+   
 
+          <h5 className="text-white mb-4" style={{textDecoration : 'underline'}}>Main Note</h5>
             <EditableText initialText={note.note_title} onSave={handleTitleSave} />
             <div className="mt-5">
               <EditableText2 initialText2={note.note_desc} onSave={handleDescSave} />
@@ -229,13 +258,19 @@ const handleSubmitReminder = async(e) =>{
 
             {calendar && (
               <>
-              <p style={{fontSize:'20px' ,textDecoration:'underline'}} className="mt-5 text-white">Calendar</p>
+               <hr className="mt-5" style={{
+      border: "none",
+      borderColor :"white",
+      borderTop: "1px solid #ccc",
+      margin: "20px 0"
+    }} />
+              <p style={{fontSize:'20px' ,textDecoration:'underline'}} className=" text-white">Calendar</p>
               <Row>
                 <Col>
                 <Calendar  onChange={handleDateChange} value={chooseDate}  /> 
           
-        </Col>
-             <Col>
+               </Col>
+              <Col>
            {chooseDate&&(
             <>
              <Card className="mt-2" >
@@ -273,13 +308,18 @@ const handleSubmitReminder = async(e) =>{
          </Form>
       )}
 
+
     
               </Card.Text>
             </Card.Body>
           </Card>
+         
           
                   </>
               )}
+
+
+              
           
         </Col>
         </Row>
@@ -291,11 +331,33 @@ const handleSubmitReminder = async(e) =>{
 
              
 
-                <div className="mt-5">
-              <Button variant="danger" onClick={() => setShowModal(true)}>
-                Delete
-              </Button>
-            </div>
+               
+
+            
+              {showReminder&&(
+                <div>
+                <h5 className="mb-3 mt-5 text-white">Your Reminders</h5>
+                <Row  xs={4} md={4}>
+            {showReminder && showReminder.map(reminder=>(
+              <div>
+               <Col >
+               <Card className="mb-5" style={{ width: '18rem' }}>
+                  <Card.Body>
+        <div key={reminder.reminder_id}>
+           <p> Date : {reminder.reminder_date}</p>
+           <p> Event Name : {reminder.reminder_title}</p>
+           <p > Details : {reminder.reminder_desc}</p>
+        </div>
+          </Card.Body>
+          </Card>
+             </Col >
+             </div>
+      ))}
+                   </Row>
+
+    
+          </div>
+              )}  
 
           
 
@@ -313,6 +375,12 @@ const handleSubmitReminder = async(e) =>{
               </Modal.Footer>
             </Modal>
           </div>
+
+
+          <div> 
+</div>
+
+
      </Container>
           <SideBar />
           
