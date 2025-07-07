@@ -15,6 +15,9 @@ import 'react-calendar/dist/Calendar.css';
 import '../App.css';
 import { Card , Col ,Row} from "react-bootstrap";
 import { Form } from "react-bootstrap";
+import { HiMenuAlt3 } from "react-icons/hi";
+
+
 function NotePage() {
 
   const [note, setNote] = useState(null);
@@ -55,7 +58,7 @@ useEffect(()=>{
 
 
   getReminders();
-},[])
+},[id])
 
 useEffect(()=>{
   
@@ -102,8 +105,8 @@ const handleSubmitReminder = async(e) =>{
 
 
 
-  const handleReminder = () =>{
-    setReminderInput(true);
+  const handleReminder = (status) =>{
+    setReminderInput(status);
   }
 
 
@@ -189,6 +192,31 @@ const handleSubmitReminder = async(e) =>{
     }
   };
 
+  const deleteReminder = async(reminderID) =>{
+    const {error} = await supabase.from("Reminder").delete().eq("reminder_id" , reminderID);
+
+    if ( error) {
+      console.log("error deleting reminder" , error.message);
+      return;
+    }
+    if(!error){
+      console.log("reminder deleted successfully!");
+      setReminderInput();
+    }
+
+   const { data : fetchNotes, error: fetchError } = await supabase
+  .from("Reminder")
+  .select("reminder_id, reminder_title, reminder_desc, reminder_date, note_id") 
+  .eq("note_id", id);
+
+    if(fetchError){
+      console.log("error fetching notes after delete", fetchError.message);
+      return;
+    } else{
+      setShowReminder(fetchNotes);
+    }
+  }
+
 
   
 
@@ -237,7 +265,7 @@ const handleSubmitReminder = async(e) =>{
           <Navbar.Text className="text-white" >
             <NavDropdown title="..." id="basic-nav-dropdown" style={{backgroundColor: 'rgb(24, 22, 26)' , color:'white'}} >
               <NavDropdown.Item  onClick={toggleCalendar}  >Add Calendar</NavDropdown.Item>
-              <NavDropdown.Item  style={{backgroundColor :'red' , color :'white'}} onClick={() => setShowModal(true)}> Delete </NavDropdown.Item>
+              <NavDropdown.Item  style={{backgroundColor :'red' , color :'white'}} onClick={() => setShowModal(true)}> Delete Note </NavDropdown.Item>
 
             </NavDropdown>
           </Navbar.Text>
@@ -344,7 +372,21 @@ const handleSubmitReminder = async(e) =>{
                <Card className="mb-5" style={{ width: '18rem' }}>
                   <Card.Body>
         <div key={reminder.reminder_id}>
-           <p> Date : {reminder.reminder_date}</p>
+          <Row className="justify-content-end">
+            <Col xs="auto">
+              <NavDropdown title={<HiMenuAlt3/>}className="text-dark">
+              <NavDropdown.Item href="#action/3.1">Edit Reminder</NavDropdown.Item>
+              <NavDropdown.Item onClick={()=>deleteReminder(reminder.reminder_id)} variant="danger" style={{backgroundColor:'red' , color:'white'}}>
+                Delete Reminder
+              </NavDropdown.Item>
+            
+            </NavDropdown>
+
+            </Col>
+          </Row>
+            <p className="text-dark"> Date : {reminder.reminder_date}</p> 
+
+          
            <p> Event Name : {reminder.reminder_title}</p>
            <p > Details : {reminder.reminder_desc}</p>
         </div>
