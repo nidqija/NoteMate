@@ -148,16 +148,7 @@ function NotePage() {
               <Alert.Heading>New Component!</Alert.Heading><p>Calendar is added!</p>
             </Alert>
           )}
-          {createReminder && (
-            <Alert variant="success" dismissible onClose={() => setCreateReminder(false)}>
-              <Alert.Heading>Added!</Alert.Heading><p>Your reminder has been added!</p>
-            </Alert>
-          )}
-          {delReminder && (
-            <Alert variant="danger" dismissible onClose={() => setDeleteReminder(false)}>
-              <Alert.Heading>Deleted!</Alert.Heading><p>Your reminder has been deleted!</p>
-            </Alert>
-          )}
+     
 
           <div className="p-5" style={{ backgroundColor: "rgb(24, 22, 26)", fontFamily: "League Spartan" }}>
             <Navbar className="mb-5" style={{ backgroundColor: 'rgb(24, 22, 26)' }}>
@@ -222,6 +213,17 @@ function NotePage() {
                 </Row>
               </>
             )}
+
+                 {createReminder && (
+            <Alert className="mt-5" variant="success" dismissible onClose={() => setCreateReminder(false)}>
+              <Alert.Heading>Added!</Alert.Heading><p>Your reminder has been added!</p>
+            </Alert>
+          )}
+          {delReminder && (
+            <Alert className="mt-5"  variant="danger" dismissible onClose={() => setDeleteReminder(false)}>
+              <Alert.Heading>Deleted!</Alert.Heading><p>Your reminder has been deleted!</p>
+            </Alert>
+          )}
 
             <h5 className="mb-3 mt-5 text-white">Your Reminders</h5>
             <Row xs={4} md={4}>
