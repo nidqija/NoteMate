@@ -36,6 +36,7 @@ function NotePage() {
   const [showReminder , setShowReminder] = useState(null);
   const { id } = useParams();
   const localKey = `calendar_${id}`;
+  const [reminders , setReminders] = useState([]);
 
 
 
@@ -43,7 +44,7 @@ function NotePage() {
 
 useEffect(()=>{
   const getReminders = async() =>{
-    const {data , error} = await supabase.from("Reminder").select(`reminder_id , reminder_title , reminder_desc, reminder_date ,Notes(id)`).eq('note_id' ,id);
+    const {data , error} = await supabase.from("Reminder").select(`reminder_id , reminder_title , reminder_desc, reminder_date`).eq('note_id' ,id);
       
     if(error){
       console.log("error showing reminders" , error.message);
@@ -77,6 +78,28 @@ useEffect(()=>{
 },[])
 
 
+useEffect(()=>{
+  const getRemindersbyId = async()=>{
+    const {data , error} = await supabase
+    .from("Reminders")
+    .select("reminder_title , reminder_desc, reminder_id")
+    .eq("note_id",id);
+
+    if(error){
+      console.log("error fetching reminders" , error.message);
+      return;
+    } 
+
+    setReminders(data);
+
+    
+  }
+
+  if (id){
+    getRemindersbyId(id);
+  }
+},[id])
+
 const handleSubmitReminder = async(e) =>{
   e.preventDefault();
 
@@ -96,6 +119,7 @@ const handleSubmitReminder = async(e) =>{
   } else{
     console.log("Reminder created successfully!" , data);
     navigate(`/notes/${id}`);
+    window.location.reload();
     setReminderDesc("");
     setReminderTitle("");
     handleReminder(false);
