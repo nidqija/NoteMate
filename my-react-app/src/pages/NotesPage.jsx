@@ -1,4 +1,5 @@
 // pages/NotePage.jsx
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { supabase } from "../CreateClient";
@@ -7,6 +8,8 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 import SideBar from "../components/navbar";
 import EditableText from "../components/editableText";
 import EditableText2 from "../components/editableText2";
+import EditableReminderTitle from "../components/editableReminderTitle";
+import EditableReminderDesc from "../components/editableReminderDetails";
 import { Button, Modal, Alert, Navbar, Container, NavDropdown, Card, Col, Row, Form } from "react-bootstrap";
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -14,7 +17,6 @@ import '../App.css';
 import { HiMenuAlt3 } from "react-icons/hi";
 
 function NotePage() {
-
   const [note, setNote] = useState(null);
   const [fetchError, setFetchError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -24,7 +26,6 @@ function NotePage() {
   const [reminderInput, setReminderInput] = useState(false);
   const [reminder_title, setReminderTitle] = useState("");
   const [reminder_desc, setReminderDesc] = useState("");
-  const [notes, setNotes] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [createReminder, setCreateReminder] = useState(false);
   const [delReminder, setDeleteReminder] = useState(false);
@@ -55,60 +56,49 @@ function NotePage() {
     if (id) fetchReminders();
   }, [id, createReminder, delReminder]);
 
-  // Fetch all notes (if needed for sidebar etc)
-  useEffect(() => {
-    const getNotes = async () => {
-      const { data, error } = await supabase.from("Notes").select("*");
-      if (error) console.log("error fetching notes", error);
-      else setNotes(data);
-    };
-    getNotes();
-  }, []);
+  // Handle reminder updates
+  const handleReminderTitle = async (reminder_id, newReminderTitle) => {
+    const { data, error } = await supabase
+      .from("Reminder")
+      .update({ reminder_title: newReminderTitle })
+      .eq("reminder_id", reminder_id)
+      .select();
 
-  const handleSubmitReminder = async (e) => {
-    e.preventDefault();
-    const { error } = await supabase.from("Reminder").insert({
-      reminder_title,
-      reminder_desc,
-      reminder_date: chooseDate.toDateString(),
-      note_id: parseInt(id),
-    });
-    if (error) {
-      console.log("error submitting reminder", error.message);
-      return;
-    }
-    console.log("Reminder created successfully!");
-    setReminderDesc("");
-    setReminderTitle("");
-    handleReminder(false);
-    setCreateReminder(true);
-  };
-
-  const deleteReminder = async (reminderID) => {
-    const { error } = await supabase.from("Reminder").delete().eq("reminder_id", reminderID);
-    if (error) console.log("error deleting reminder", error.message);
-    else {
-      console.log("reminder deleted successfully!");
-      setDeleteReminder(true);
+    if (!error) {
+      console.log("Reminder title updated:", data);
+      setReminders(prev =>
+        prev.map(r =>
+          r.reminder_id === reminder_id ? { ...r, reminder_title: newReminderTitle } : r
+        )
+      );
+    } else {
+      console.log("Error updating reminder title:", error.message);
     }
   };
 
-  const handleReminder = (status) => setReminderInput(status);
-  const handleDateChange = (date) => setChooseDate(date);
-  const toggleCalendar = () => { setCalendar(prev => !prev); setCalendarModal(true); };
+  const handleReminderDesc = async (reminder_id, newReminderDesc) => {
+    const { data, error } = await supabase
+      .from("Reminder")
+      .update({ reminder_desc: newReminderDesc })
+      .eq("reminder_id", reminder_id)
+      .select();
 
-  // Load calendar visibility from local storage
-  const getCalendarVisibility = () => localStorage.getItem(localKey) === 'true';
-  const [calendar, setCalendar] = useState(getCalendarVisibility);
+    if (!error) {
+      console.log("Reminder desc updated:", data);
+      setReminders(prev =>
+        prev.map(r =>
+          r.reminder_id === reminder_id ? { ...r, reminder_desc: newReminderDesc } : r
+        )
+      );
 
-  useEffect(() => {
-    localStorage.setItem(localKey, calendar);
-  }, [calendar, localKey]);
+      console.log("Updating reminder_id:", reminder_id, "newDesc:", newReminderDesc);
 
-  useEffect(() => {
-    if (message) setSuccessEdited(true);
-  }, [message]);
+    } else {
+      console.log("Error updating reminder desc:", error.message);
+    }
+  };
 
+  // Handle note title/desc updates
   const handleTitleSave = async (newTitle) => {
     const { error } = await supabase.from("Notes").update({ note_title: newTitle }).eq("id", id);
     if (!error) setNote(prev => ({ ...prev, note_title: newTitle }));
@@ -119,12 +109,55 @@ function NotePage() {
     if (!error) setNote(prev => ({ ...prev, note_desc: newDesc }));
   };
 
+  // Handle reminder insert
+  const handleSubmitReminder = async (e) => {
+    e.preventDefault();
+    const { error } = await supabase.from("Reminder").insert({
+      reminder_title,
+      reminder_desc,
+      reminder_date: chooseDate.toDateString(),
+      note_id: parseInt(id),
+    });
+    if (!error) {
+      console.log("Reminder created successfully!");
+      setReminderDesc("");
+      setReminderTitle("");
+      handleReminder(false);
+      setCreateReminder(true);
+    } else {
+      console.log("error submitting reminder", error.message);
+    }
+  };
+
+  const deleteReminder = async (reminderID) => {
+    const { error } = await supabase.from("Reminder").delete().eq("reminder_id", reminderID);
+    if (!error) {
+      console.log("reminder deleted successfully!");
+      setDeleteReminder(true);
+    } else {
+      console.log("error deleting reminder", error.message);
+    }
+  };
+
   const deleteNote = async () => {
     const { error } = await supabase.from("Notes").delete().eq("id", id);
     if (!error) navigate("/home", { state: { message2: "Note deleted successfully" } });
   };
 
-  // Calendar tile coloring based on reminders
+  const handleReminder = (status) => setReminderInput(status);
+  const handleDateChange = (date) => setChooseDate(date);
+  const toggleCalendar = () => { setCalendar(prev => !prev); setCalendarModal(true); };
+
+  const getCalendarVisibility = () => localStorage.getItem(localKey) === 'true';
+  const [calendar, setCalendar] = useState(getCalendarVisibility);
+  useEffect(() => {
+    localStorage.setItem(localKey, calendar);
+  }, [calendar, localKey]);
+
+  useEffect(() => {
+    if (message) setSuccessEdited(true);
+  }, [message]);
+
   const tileContent = ({ date, view }) => {
     if (view === 'month') {
       const hasReminder = reminders.some(r => new Date(r.reminder_date).toDateString() === date.toDateString());
@@ -132,6 +165,9 @@ function NotePage() {
     }
     return null;
   };
+
+
+  
 
   return (
     <div>
@@ -143,12 +179,6 @@ function NotePage() {
               <Alert.Heading>Updated!</Alert.Heading><p>Your note has been updated!</p>
             </Alert>
           )}
-          {calendar && calendarModal && (
-            <Alert variant="success" dismissible onClose={() => setCalendarModal(false)}>
-              <Alert.Heading>New Component!</Alert.Heading><p>Calendar is added!</p>
-            </Alert>
-          )}
-     
 
           <div className="p-5" style={{ backgroundColor: "rgb(24, 22, 26)", fontFamily: "League Spartan" }}>
             <Navbar className="mb-5" style={{ backgroundColor: 'rgb(24, 22, 26)' }}>
@@ -214,17 +244,6 @@ function NotePage() {
               </>
             )}
 
-                 {createReminder && (
-            <Alert className="mt-5" variant="success" dismissible onClose={() => setCreateReminder(false)}>
-              <Alert.Heading>Added!</Alert.Heading><p>Your reminder has been added!</p>
-            </Alert>
-          )}
-          {delReminder && (
-            <Alert className="mt-5"  variant="danger" dismissible onClose={() => setDeleteReminder(false)}>
-              <Alert.Heading>Deleted!</Alert.Heading><p>Your reminder has been deleted!</p>
-            </Alert>
-          )}
-
             <h5 className="mb-3 mt-5 text-white">Your Reminders</h5>
             <Row xs={4} md={4}>
               {reminders.length > 0 ? reminders.map(reminder => (
@@ -234,16 +253,34 @@ function NotePage() {
                       <Row className="justify-content-end">
                         <Col xs="auto">
                           <NavDropdown title={<HiMenuAlt3 />} className="text-dark">
-                            <NavDropdown.Item>Edit Reminder</NavDropdown.Item>
-                            <NavDropdown.Item onClick={() => deleteReminder(reminder.reminder_id)} style={{ backgroundColor: "red", color: "white" }}>
+                            <NavDropdown.Item >Edit Reminder ( Double Click Below )</NavDropdown.Item>
+                            <NavDropdown.Item
+                              onClick={() => deleteReminder(reminder.reminder_id)}
+                              style={{ backgroundColor: "red", color: "white" }}>
                               Delete Reminder
                             </NavDropdown.Item>
                           </NavDropdown>
                         </Col>
                       </Row>
                       <p className="text-dark">Date: {reminder.reminder_date}</p>
-                      <p>Event Name: {reminder.reminder_title}</p>
-                      <p>Details: {reminder.reminder_desc}</p>
+                      <p>
+                        Event Name:{" "}
+                        <EditableReminderTitle
+                          initialReminderTitle = {reminder.reminder_title}
+                          onSaveReminder={(newTitle) =>
+                            handleReminderTitle(reminder.reminder_id, newTitle)
+                          }
+                        />
+                      </p>
+                      <p>
+                        Details:{" "}
+                        <EditableReminderDesc
+                          initialReminderDesc={reminder.reminder_desc}
+                          onSaveReminderDesc={(newDesc) =>
+                            handleReminderDesc(reminder.reminder_id, newDesc)
+                          }
+                        />
+                      </p>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -259,7 +296,6 @@ function NotePage() {
                 <Button variant="danger" onClick={deleteNote}>Proceed</Button>
               </Modal.Footer>
             </Modal>
-
           </div>
         </Container>
       )}

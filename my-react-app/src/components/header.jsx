@@ -55,6 +55,9 @@ function Header() {
         setNotes(data);
         setFetchErrors(null);
       }
+
+       console.log("Data:", data);
+  console.log("Error:", error);
     };
 
     fetchNotes();
