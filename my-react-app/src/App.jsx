@@ -33,7 +33,7 @@ function App() {
         <Route path="/home" element={<NotesPage />} />
         <Route path="/newnote" element={<NewNotes/>}/>
         <Route path="/notes/:id" element={<NotePage/>}/>
-        <Route path='/signup' element={<SignUpPage/>}/>
+        <Route path='/registerusers' element={<SignUpPage/>}/>
       </Routes>
     </Router> 
   );
