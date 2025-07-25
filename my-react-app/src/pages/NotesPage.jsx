@@ -161,7 +161,7 @@ function NotePage() {
   const tileContent = ({ date, view }) => {
     if (view === 'month') {
       const hasReminder = reminders.some(r => new Date(r.reminder_date).toDateString() === date.toDateString());
-      if (hasReminder) return <div style={{ backgroundColor: 'rgba(48, 44, 52, 1)', borderRadius: '50%', width: '10px', height: '10px', margin: 'auto' }}></div>;
+      if (hasReminder)  return <div style={{ backgroundColor: 'rgba(48, 44, 52, 1)', borderRadius: '50%', width: '10px', height: '10px', margin: 'auto' }}></div>;
     }
     return null;
   };
